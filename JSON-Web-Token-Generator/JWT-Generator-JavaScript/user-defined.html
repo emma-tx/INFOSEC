@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <script src="jquery-3.3.1.min.js"></script>
+        <script src="jquery.base64.min.js"></script>  
+        <script src="crypto-js.min.js"></script>
+        <script src="hmac-sha256.min.js"></script>
+        <script src="enc-base64.min.js"></script>
+        <link rel="stylesheet" href="bootstrap.css"> 
+    </head>
+
+    <body>
+
+        <script>
+            function generateToken()
+            {
+                var secretKey = usersecretkey.value;
+
+                // The token header as unencoded JSON. The values here shouldn't change
+                var headerjson =  userheader.value,
+                    headerobj = JSON.parse(headerjson);
+
+                // The token payload as unencoded JSON. Contains the user name, subject and identifier(s)
+                var payloadjson = userpayload.value,
+                    payloadobj = JSON.parse(payloadjson);
+
+                var payloadbox = document.getElementById('tokenpayload');
+               payloadbox.value = payloadjson;
+
+
+                // Encode header segment
+                headerb64 = btoa(unescape(encodeURIComponent(headerjson)));
+                headerb64str = decodeURIComponent(escape(window.atob(headerb64)));
+
+                // Encode payload segment
+                payloadb64 = btoa(unescape(encodeURIComponent(payloadjson)));
+                payloadb64str = decodeURIComponent(escape(window.atob(payloadb64)));
+
+                // Display the Base64-encoded token header
+                var headerbox = document.getElementById('encodedheader');
+                headerbox.value = headerb64;
+
+                // Display the Base64-encoded payload
+                var payloadbox = document.getElementById('encodedpayload');
+                payloadbox.value = payloadb64;
+
+                // The unsigned token is the Base4-encoded header and payload combined.
+                var unsignedToken = headerb64 + "." + payloadb64;
+
+                // Use HMAC SHA256 to sign the unsigned token using the secret key
+                var tokenSignature = CryptoJS.HmacSHA256(unsignedToken, secretKey);
+                var encodedTokenSignature = CryptoJS.enc.Base64.stringify(tokenSignature);
+    
+                gentoken.value = encodedTokenSignature;
+
+                // Display the signed token, which is all three Base4-encoded segments
+                var allsegments = document.getElementById('segmentsbox');
+                allsegments.value = headerb64 + "." + payloadb64 + "." + encodedTokenSignature;
+            };
+        </script>
+
+        <div class="container">
+            <div class="col-sm-6">
+                <div class="well">
+                    <label for="userheader">Token Header:</label></br>
+                    <font size="2">Type or paste the JSON header data here.</font>
+                    <textarea class="form-control" rows="10" id="userheader">
+                    </textarea></br>
+
+                    <label for="userpayload">Token Payload:</label></br>
+                    <font size="2">Type or paste the JSON payload data here.</font>
+                    <textarea class="form-control" rows="10" id="userpayload">
+                    </textarea></br>
+
+                    <label for="usr">Secret Key:</label>
+                    <input type="text" class="form-control" id="usersecretkey">
+
+                    </br>
+                    <button class="btn btn-default" onclick="generateToken()">Generate Token</button>
+
+                </div>
+            </div>
+
+            <div class="col-sm-6">
+
+                <label for="tokenpayload">Token Payload:</label>
+                <textarea class="form-control" rows="5" id="tokenpayload"></textarea></br>
+
+                <label for="encodedheader">Token Header:</label>
+                <textarea class="form-control" rows="2" id="encodedheader"></textarea></br>
+
+                <label for="tokenpayload">Token Payload:</label>
+                <textarea class="form-control" rows="5" id="encodedpayload"></textarea></br>
+
+                <label for="gentoken">Token Signature:</label>
+                <textarea class="form-control" rows="2" id="gentoken"></textarea></br>
+
+                <label for="segmentsbox">Full JWT Token:</label>
+                <textarea class="form-control" rows="5" id="segmentsbox"></textarea></br>
+
+                <label for="timebox">T+:</label>
+                <textarea class="form-control" rows="1" id="timebox"></textarea></br>
+            </div>
+        </div>
+    </body>
+</html>
